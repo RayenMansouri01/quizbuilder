@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizBuilder</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Epilogue:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:       #07090f;
+  --bg2:      #0d1117;
+  --surface:  rgba(255,255,255,0.04);
+  --surface2: rgba(255,255,255,0.07);
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.15);
+  --cyan:     #06b6d4;
+  --cyan2:    #22d3ee;
+  --cyan3:    #67e8f9;
+  --orange:   #f97316;
+  --orange2:  #fb923c;
+  --green:    #22c55e;
+  --green2:   #4ade80;
+  --rose:     #f43f5e;
+  --rose2:    #fb7185;
+  --amber:    #f59e0b;
+  --text:     #eef2ff;
+  --text2:    #7d8fa8;
+  --text3:    #3d4f63;
+  --r:        16px;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Epilogue',sans-serif;
+  font-weight:300;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 45% at 10% 5%,   rgba(6,182,212,0.10) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 90%,  rgba(249,115,22,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse 35% 55% at 50% 50%,  rgba(34,211,238,0.04) 0%,transparent 65%);
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(6,182,212,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(6,182,212,0.025) 1px,transparent 1px);
+  background-size:72px 72px;
+  pointer-events:none;z-index:0;
+}
+
+.app{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 24px 80px}
+
+/* ── NAV ─────────────────────────────────── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:28px 0 32px;animation:slideDown .6s ease both}
+.logo{display:flex;align-items:center;gap:12px;font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem}
+.logo-icon{
+  width:40px;height:40px;border-radius:12px;
+  background:linear-gradient(135deg,#0891b2,#22d3ee);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 0 28px rgba(6,182,212,0.4);
+}
+.logo span{color:var(--cyan2)}
+.nav-pill{
+  font-family:'Syne',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text3);background:var(--surface);border:1px solid var(--border);
+  padding:6px 16px;border-radius:20px;
+}
+
+/* ── HERO ────────────────────────────────── */
+.hero{text-align:center;padding:40px 0 48px;animation:fadeUp .7s ease both;animation-delay:.1s}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.22);
+  padding:6px 18px;border-radius:20px;
+  font-family:'Syne',sans-serif;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--cyan3);margin-bottom:22px;
+}
+.hero h1{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(2rem,5vw,3.6rem);line-height:1.08;margin-bottom:14px;
+}
+.hero h1 span{
+  background:linear-gradient(135deg,var(--cyan),var(--orange),var(--cyan2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero p{color:var(--text2);font-size:.97rem;line-height:1.7;max-width:460px;margin:0 auto}
+
+/* ── TABS ────────────────────────────────── */
+.tabs{display:flex;gap:8px;margin-bottom:28px;animation:fadeUp .5s ease both;animation-delay:.2s}
+.tab{
+  flex:1;padding:14px;border-radius:12px;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;
+  cursor:pointer;border:1px solid var(--border);
+  background:var(--surface);color:var(--text2);
+  transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.tab:hover{border-color:var(--border2);color:var(--text)}
+.tab.active{
+  background:rgba(6,182,212,0.12);border-color:var(--cyan);
+  color:var(--cyan2);box-shadow:0 0 24px rgba(6,182,212,0.12);
+}
+.tab-count{
+  background:rgba(6,182,212,0.2);color:var(--cyan2);
+  font-size:.72rem;padding:2px 8px;border-radius:10px;
+}
+
+/* ── VIEWS ───────────────────────────────── */
+.view{display:none;animation:fadeUp .4s ease both}
+.view.active{display:block}
+
+/* ── PANEL ───────────────────────────────── */
+.panel{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);backdrop-filter:blur(20px);
+}
+.panel-head{
+  padding:22px 24px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.panel-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem}
+.panel-body{padding:24px}
+
+/* ── FORM ────────────────────────────────── */
+.form-group{margin-bottom:16px}
+.form-label{
+  display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);font-family:'Syne',sans-serif;font-weight:500;margin-bottom:8px;
+}
+input[type=text]{
+  width:100%;padding:12px 16px;
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-family:'Epilogue',sans-serif;font-size:.9rem;
+  outline:none;transition:border-color .25s,background .25s,box-shadow .25s;
+}
+input[type=text]::placeholder{color:var(--text3)}
+input[type=text]:focus{
+  border-color:var(--cyan);background:rgba(6,182,212,0.06);
+  box-shadow:0 0 0 3px rgba(6,182,212,0.1);
+}
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.option-wrap{position:relative}
+.option-label{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;
+  color:var(--text3);pointer-events:none;letter-spacing:.06em;
+}
+.option-wrap input{padding-left:36px}
+.option-wrap.correct input{
+  border-color:var(--green);background:rgba(34,197,94,0.07);
+}
+.option-wrap.correct .option-label{color:var(--green2)}
+
+/* ── CORRECT SELECTOR ───────────────────── */
+.correct-selector{display:flex;gap:8px;flex-wrap:wrap}
+.correct-btn{
+  padding:8px 16px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text2);
+  font-family:'Syne',sans-serif;font-size:.8rem;font-weight:600;
+  cursor:pointer;transition:all .2s;
+}
+.correct-btn:hover{border-color:var(--border2);color:var(--text)}
+.correct-btn.selected{
+  background:rgba(34,197,94,0.15);border-color:var(--green);
+  color:var(--green2);
+}
+
+/* ── BUTTONS ─────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 20px;border-radius:10px;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;
+  letter-spacing:.03em;cursor:pointer;border:none;transition:all .22s;
+}
+.btn-full{width:100%}
+.btn-cyan{
+  background:linear-gradient(135deg,#0891b2,#22d3ee);color:#fff;
+  box-shadow:0 4px 24px rgba(6,182,212,0.28);
+}
+.btn-cyan:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(6,182,212,0.42);filter:brightness(1.08)}
+.btn-cyan:active{transform:translateY(0)}
+.btn-orange{
+  background:linear-gradient(135deg,#ea580c,#f97316);color:#fff;
+  box-shadow:0 4px 24px rgba(249,115,22,0.28);
+}
+.btn-orange:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(249,115,22,0.4)}
+.btn-ghost{
+  background:transparent;color:var(--text3);border:1px solid var(--border);
+  font-size:.8rem;padding:8px 14px;border-radius:8px;
+}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text2);background:var(--surface2)}
+.btn-danger{
+  background:rgba(244,63,94,0.1);color:var(--rose2);
+  border:1px solid rgba(244,63,94,0.2);font-size:.8rem;padding:8px 14px;border-radius:8px;
+}
+.btn-danger:hover{background:rgba(244,63,94,0.18);border-color:rgba(244,63,94,0.35)}
+
+/* ── QUESTION CARDS ─────────────────────── */
+.q-list{display:flex;flex-direction:column;gap:12px;margin-top:24px}
+.q-card{
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:16px 20px;display:flex;align-items:flex-start;gap:14px;
+  animation:slideIn .3s ease both;transition:border-color .2s;
+}
+.q-card:hover{border-color:var(--border2)}
+.q-num{
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.25);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:.8rem;color:var(--cyan2);
+}
+.q-info{flex:1;min-width:0}
+.q-text{font-weight:500;font-size:.9rem;line-height:1.4;margin-bottom:8px}
+.q-opts{display:flex;flex-wrap:wrap;gap:6px}
+.q-opt{
+  font-size:.72rem;padding:3px 10px;border-radius:6px;
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);
+  color:var(--text2);
+}
+.q-opt.good{
+  background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3);
+  color:var(--green2);font-weight:600;
+}
+.q-del{
+  background:none;border:none;cursor:pointer;color:var(--text3);
+  padding:6px;border-radius:8px;font-size:14px;transition:color .2s,background .2s;flex-shrink:0;
+}
+.q-del:hover{color:var(--rose2);background:rgba(244,63,94,0.1)}
+
+.empty-state{
+  text-align:center;padding:50px 20px;color:var(--text3);
+  animation:fadeUp .4s ease both;
+}
+.empty-icon{font-size:44px;margin-bottom:14px}
+.empty-state h3{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:8px;color:var(--text2)}
+.empty-state p{font-size:.85rem;line-height:1.6;max-width:300px;margin:0 auto}
+
+/* ── QUIZ PLAY ───────────────────────────── */
+#playView{max-width:680px;margin:0 auto}
+
+.quiz-progress{margin-bottom:28px}
+.qp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.qp-label{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:600;color:var(--text3)}
+.qp-score{font-family:'Syne',sans-serif;font-size:.85rem;font-weight:700;color:var(--cyan2)}
+.progress-track{height:6px;background:var(--surface2);border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.progress-fill{
+  height:100%;border-radius:6px;
+  background:linear-gradient(90deg,var(--cyan),var(--cyan2));
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+
+.quiz-question-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:36px 32px;
+  animation:fadeUp .4s ease both;
+}
+.qq-number{
+  font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;
+}
+.qq-text{
+  font-family:'Syne',sans-serif;font-weight:700;font-size:1.25rem;
+  line-height:1.35;margin-bottom:28px;
+}
+.qq-options{display:flex;flex-direction:column;gap:10px}
+.qq-opt{
+  padding:16px 20px;border-radius:12px;
+  background:var(--surface2);border:1px solid var(--border);
+  cursor:pointer;font-size:.92rem;font-weight:400;
+  transition:all .2s;display:flex;align-items:center;gap:14px;
+  text-align:left;width:100%;color:var(--text);
+}
+.qq-opt:hover:not([disabled]){
+  border-color:var(--cyan);background:rgba(6,182,212,0.08);
+  transform:translateX(4px);
+}
+.qq-opt .opt-letter{
+  width:32px;height:32px;border-radius:8px;flex-shrink:0;
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;color:var(--text3);
+  transition:all .2s;
+}
+.qq-opt:hover:not([disabled]) .opt-letter{background:rgba(6,182,212,0.15);border-color:var(--cyan);color:var(--cyan2)}
+.qq-opt.correct{
+  border-color:var(--green);background:rgba(34,197,94,0.1);
+  animation:pulseGreen .4s ease;
+}
+.qq-opt.correct .opt-letter{background:rgba(34,197,94,0.2);border-color:var(--green);color:var(--green2)}
+.qq-opt.wrong{
+  border-color:var(--rose2);background:rgba(244,63,94,0.09);
+  animation:pulseRed .4s ease;
+}
+.qq-opt.wrong .opt-letter{background:rgba(244,63,94,0.15);border-color:var(--rose2);color:var(--rose2)}
+.qq-opt[disabled]{cursor:not-allowed;opacity:.7}
+
+.feedback-msg{
+  display:none;margin-top:16px;padding:14px 18px;border-radius:10px;
+  font-size:.88rem;font-weight:500;align-items:center;gap:10px;
+}
+.feedback-msg.show{display:flex}
+.fb-correct{background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);color:var(--green2)}
+.fb-wrong{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.22);color:var(--rose2)}
+
+.quiz-nav{margin-top:24px;display:flex;justify-content:flex-end}
+
+/* ── RESULT SCREEN ──────────────────────── */
+#resultScreen{
+  display:none;text-align:center;padding:40px 20px;
+  animation:fadeUp .5s ease both;max-width:560px;margin:0 auto;
+}
+.result-circle{
+  width:140px;height:140px;border-radius:50%;margin:0 auto 28px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+}
+.result-circle::before{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  border:3px solid transparent;
+  background:linear-gradient(var(--bg),var(--bg)) padding-box,
+             linear-gradient(135deg,var(--cyan),var(--orange)) border-box;
+}
+.rc-score{font-family:'Syne',sans-serif;font-weight:800;font-size:2.8rem;line-height:1;color:var(--text)}
+.rc-label{font-size:.78rem;color:var(--text3);font-family:'Syne',sans-serif;letter-spacing:.08em;margin-top:4px}
+.result-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;margin-bottom:10px}
+.result-sub{color:var(--text2);font-size:.95rem;line-height:1.6;margin-bottom:32px}
+.result-stars{font-size:2rem;letter-spacing:6px;margin-bottom:20px}
+.result-breakdown{
+  display:flex;gap:16px;justify-content:center;margin-bottom:32px;flex-wrap:wrap;
+}
+.rb-item{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:14px 22px;text-align:center;
+}
+.rb-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem}
+.rb-lbl{font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-family:'Syne',sans-serif;margin-top:4px}
+
+/* ── ALERT ───────────────────────────────── */
+.alert{
+  display:none;align-items:center;gap:10px;padding:12px 16px;
+  border-radius:10px;font-size:.85rem;margin-top:12px;
+}
+.alert.show{display:flex}
+.alert-warn{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:var(--amber)}
+
+/* ── STATS STRIP ────────────────────────── */
+.stats-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.ss-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:16px;text-align:center;animation:fadeUp .5s ease both;
+  position:relative;overflow:hidden;
+}
+.ss-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--sc,var(--cyan))}
+.ss-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.7rem;color:var(--sc,var(--cyan))}
+.ss-lbl{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-family:'Syne',sans-serif;margin-top:4px}
+
+/* ── ANIMATIONS ──────────────────────────── */
+@keyframes slideDown {from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp    {from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn   {from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes popIn     {from{opacity:0;transform:scale(.85)}       to{opacity:1;transform:scale(1)}}
+@keyframes shake     {0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes pulseGreen{0%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}100%{box-shadow:0 0 0 10px rgba(34,197,94,0)}}
+@keyframes pulseRed  {0%{box-shadow:0 0 0 0 rgba(244,63,94,.35)}100%{box-shadow:0 0 0 10px rgba(244,63,94,0)}}
+.shake{animation:shake .35s ease;border-color:var(--rose2)!important}
+
+/* ── RESPONSIVE ──────────────────────────── */
+@media(max-width:600px){
+  .options-grid{grid-template-columns:1fr}
+  .tabs{flex-direction:column}
+  .stats-strip{grid-template-columns:1fr 1fr}
+  .app{padding:0 16px 60px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      Quiz<span>Builder</span>
+    </div>
+    <div class="nav-pill">Créer · Jouer · Scorer</div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">✦ Application interactive</div>
+    <h1>Créez & jouez à<br><span>vos propres quiz</span></h1>
+    <p>Ajoutez vos questions, définissez les bonnes réponses, puis lancez le quiz et calculez votre score automatiquement.</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" id="tabCreate" onclick="switchTab('create')">
+      ✏️ Créer le quiz
+      <span class="tab-count" id="tabCount">0</span>
+    </div>
+    <div class="tab" id="tabPlay" onclick="switchTab('play')">
+      ▶️ Jouer
+    </div>
+  </div>
+
+  <!-- ══════════ CREATE VIEW ══════════ -->
+  <div class="view active" id="createView">
+
+    <!-- Stats strip -->
+    <div class="stats-strip" id="statsStrip" style="display:none">
+      <div class="ss-card" style="--sc:var(--cyan);animation-delay:.05s">
+        <div class="ss-val" id="sTotal">0</div>
+        <div class="ss-lbl">Questions</div>
+      </div>
+      <div class="ss-card" style="--sc:var(--orange2);animation-delay:.1s">
+        <div class="ss-val" id="sOpts">4</div>
+        <div class="ss-lbl">Options / Q</div>
+      </div>
+      <div class="ss-card" style="--sc:var(--green2);animation-delay:.15s">
+        <div class="ss-val" id="sReady">✓</div>
+        <div class="ss-lbl">Prêt à jouer</div>
+      </div>
+    </div>
+
+    <!-- Add question form -->
+    <div class="panel" style="animation:fadeUp .5s ease both;animation-delay:.2s;margin-bottom:20px">
+      <div class="panel-head">
+        <span class="panel-title">➕ Nouvelle question</span>
+        <span style="font-size:.78rem;color:var(--text3);font-family:'Syne',sans-serif" id="formCount">Question 1</span>
+      </div>
+      <div class="panel-body">
+
+        <div class="form-group">
+          <label class="form-label">Question</label>
+          <input type="text" id="qText" placeholder="Ex: Quelle est la capitale de la France ?">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">4 Propositions</label>
+          <div class="options-grid">
+            <div class="option-wrap" id="wrap-A">
+              <span class="option-label">A</span>
+              <input type="text" id="opt-A" placeholder="Option A">
+            </div>
+            <div class="option-wrap" id="wrap-B">
+              <span class="option-label">B</span>
+              <input type="text" id="opt-B" placeholder="Option B">
+            </div>
+            <div class="option-wrap" id="wrap-C">
+              <span class="option-label">C</span>
+              <input type="text" id="opt-C" placeholder="Option C">
+            </div>
+            <div class="option-wrap" id="wrap-D">
+              <span class="option-label">D</span>
+              <input type="text" id="opt-D" placeholder="Option D">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:22px">
+          <label class="form-label">Bonne réponse</label>
+          <div class="correct-selector">
+            <button class="correct-btn" id="cb-A" onclick="selectCorrect('A')">A</button>
+            <button class="correct-btn" id="cb-B" onclick="selectCorrect('B')">B</button>
+            <button class="correct-btn" id="cb-C" onclick="selectCorrect('C')">C</button>
+            <button class="correct-btn" id="cb-D" onclick="selectCorrect('D')">D</button>
+          </div>
+        </div>
+
+        <button class="btn btn-cyan btn-full" onclick="addQuestion()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter la question
+        </button>
+
+        <div class="alert alert-warn" id="alertWarn">
+          <span>⚠️</span><span id="alertWarnText">Remplissez tous les champs.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question list -->
+    <div class="panel" style="animation:fadeUp .5s ease both;animation-delay:.28s">
+      <div class="panel-head">
+        <span class="panel-title">📋 Questions ajoutées</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-orange" onclick="switchTab('play')" id="startBtn" disabled style="opacity:.4;font-size:.82rem;padding:8px 16px">
+            ▶ Lancer le quiz
+          </button>
+          <button class="btn btn-danger" onclick="clearAll()">🗑</button>
+        </div>
+      </div>
+      <div id="qList" style="padding:16px">
+        <div class="empty-state">
+          <div class="empty-icon">💡</div>
+          <h3>Aucune question encore</h3>
+          <p>Utilisez le formulaire ci-dessus pour ajouter vos premières questions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PLAY VIEW ══════════ -->
+  <div class="view" id="playView">
+
+    <!-- Quiz in progress -->
+    <div id="quizScreen">
+      <div class="quiz-progress">
+        <div class="qp-header">
+          <span class="qp-label" id="progressLabel">Question 1 / 0</span>
+          <span class="qp-score" id="liveScore">Score : 0</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="quiz-question-card">
+        <div class="qq-number" id="qqNumber">Question 1</div>
+        <div class="qq-text" id="qqText">—</div>
+        <div class="qq-options" id="qqOptions"></div>
+        <div class="feedback-msg fb-correct" id="fbCorrect">✅ Bonne réponse !</div>
+        <div class="feedback-msg fb-wrong"   id="fbWrong">❌ <span id="fbWrongText">Mauvaise réponse.</span></div>
+      </div>
+
+      <div class="quiz-nav">
+        <button class="btn btn-cyan" id="nextBtn" onclick="nextQuestion()" style="display:none;min-width:160px">
+          Suivant →
+        </button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div id="resultScreen">
+      <div class="result-circle">
+        <div class="rc-score" id="rcScore">0</div>
+        <div class="rc-label">/ <span id="rcTotal">0</span></div>
+      </div>
+      <div class="result-stars" id="resultStars">⭐⭐⭐</div>
+      <div class="result-title" id="resultTitle">Excellent !</div>
+      <div class="result-sub" id="resultSub">Vous avez terminé le quiz.</div>
+      <div class="result-breakdown">
+        <div class="rb-item">
+          <div class="rb-val" id="rbCorrect" style="color:var(--green2)">0</div>
+          <div class="rb-lbl">Correctes</div>
+        </div>
+        <div class="rb-item">
+          <div class="rb-val" id="rbWrong" style="color:var(--rose2)">0</div>
+          <div class="rb-lbl">Incorrectes</div>
+        </div>
+        <div class="rb-item">
+          <div class="rb-val" id="rbPct" style="color:var(--cyan2)">0%</div>
+          <div class="rb-lbl">Réussite</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-cyan" onclick="replayQuiz()">🔁 Rejouer</button>
+        <button class="btn btn-ghost" onclick="switchTab('create')">✏️ Modifier le quiz</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────
+let questions   = [];
+let selectedAns = null;
+let quizIdx     = 0;
+let quizScore   = 0;
+const LETTERS   = ['A','B','C','D'];
+
+// ── TAB SWITCH ────────────────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  if(tab==='create'){
+    document.getElementById('tabCreate').classList.add('active');
+    document.getElementById('createView').classList.add('active');
+  } else {
+    if(!questions.length){ showWarn('Ajoutez au moins une question !'); return; }
+    document.getElementById('tabPlay').classList.add('active');
+    document.getElementById('playView').classList.add('active');
+    startQuiz();
+  }
+}
+
+// ── CORRECT SELECTOR ──────────────────────────────────────────────
+function selectCorrect(letter){
+  selectedAns = letter;
+  LETTERS.forEach(l=>{
+    document.getElementById('cb-'+l).classList.toggle('selected',l===letter);
+    document.getElementById('wrap-'+l).classList.toggle('correct',l===letter);
+  });
+}
+
+// ── ADD QUESTION ──────────────────────────────────────────────────
+function addQuestion(){
+  const text = document.getElementById('qText').value.trim();
+  const opts = {};
+  let valid = true;
+
+  if(!text){ shake(document.getElementById('qText')); showWarn('Entrez la question.'); return; }
+
+  LETTERS.forEach(l=>{
+    const v = document.getElementById('opt-'+l).value.trim();
+    if(!v){ shake(document.getElementById('opt-'+l)); valid=false; }
+    opts[l] = v;
+  });
+  if(!valid){ showWarn('Remplissez les 4 propositions.'); return; }
+  if(!selectedAns){ showWarn('Sélectionnez la bonne réponse.'); return; }
+
+  hideWarn();
+  questions.push({ id:Date.now(), text, opts, correct:selectedAns });
+
+  // Reset form
+  document.getElementById('qText').value = '';
+  LETTERS.forEach(l=>{
+    document.getElementById('opt-'+l).value='';
+    document.getElementById('cb-'+l).classList.remove('selected');
+    document.getElementById('wrap-'+l).classList.remove('correct');
+  });
+  selectedAns = null;
+  document.getElementById('qText').focus();
+
+  renderQList();
+}
+
+// ── RENDER QUESTION LIST ──────────────────────────────────────────
+function renderQList(){
+  const list = document.getElementById('qList');
+  const cnt  = document.getElementById('tabCount');
+  const sBtn = document.getElementById('startBtn');
+  const strip= document.getElementById('statsStrip');
+  const fc   = document.getElementById('formCount');
+
+  cnt.textContent = questions.length;
+  sBtn.disabled   = questions.length===0;
+  sBtn.style.opacity = questions.length ? '1':'0.4';
+  strip.style.display = questions.length ? 'grid':'none';
+  document.getElementById('sTotal').textContent = questions.length;
+  document.getElementById('sReady').textContent = questions.length>0 ? '✓':'—';
+  fc.textContent = `Question ${questions.length+1}`;
+
+  if(!questions.length){
+    list.innerHTML=`<div class="empty-state"><div class="empty-icon">💡</div><h3>Aucune question encore</h3><p>Utilisez le formulaire ci-dessus pour ajouter vos premières questions.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = `<div class="q-list">${questions.map((q,i)=>`
+    <div class="q-card" style="animation-delay:${i*.04}s">
+      <div class="q-num">${i+1}</div>
+      <div class="q-info">
+        <div class="q-text">${esc(q.text)}</div>
+        <div class="q-opts">
+          ${LETTERS.map(l=>`<span class="q-opt${l===q.correct?' good':''}">
+            ${l}: ${esc(q.opts[l])}${l===q.correct?' ✓':''}
+          </span>`).join('')}
+        </div>
+      </div>
+      <button class="q-del" onclick="deleteQ(${q.id})">✕</button>
+    </div>
+  `).join('')}</div>`;
+}
+
+// ── DELETE QUESTION ───────────────────────────────────────────────
+function deleteQ(id){
+  questions = questions.filter(q=>q.id!==id);
+  renderQList();
+}
+
+// ── CLEAR ALL ─────────────────────────────────────────────────────
+function clearAll(){
+  if(!questions.length) return;
+  if(!confirm('Supprimer toutes les questions ?')) return;
+  questions=[];
+  renderQList();
+}
+
+// ── START QUIZ ────────────────────────────────────────────────────
+function startQuiz(){
+  quizIdx=0; quizScore=0;
+  document.getElementById('quizScreen').style.display='';
+  document.getElementById('resultScreen').style.display='none';
+  loadQuestion();
+}
+
+// ── LOAD QUESTION ─────────────────────────────────────────────────
+function loadQuestion(){
+  const q = questions[quizIdx];
+  const total = questions.length;
+
+  document.getElementById('progressLabel').textContent = `Question ${quizIdx+1} / ${total}`;
+  document.getElementById('liveScore').textContent     = `Score : ${quizScore}`;
+  document.getElementById('progressFill').style.width  = `${(quizIdx/total)*100}%`;
+  document.getElementById('qqNumber').textContent      = `Question ${quizIdx+1} sur ${total}`;
+  document.getElementById('qqText').textContent        = q.text;
+
+  document.getElementById('fbCorrect').classList.remove('show');
+  document.getElementById('fbWrong').classList.remove('show');
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const optsEl = document.getElementById('qqOptions');
+  optsEl.innerHTML = LETTERS.map(l=>`
+    <button class="qq-opt" id="qopt-${l}" onclick="answer('${l}')">
+      <span class="opt-letter">${l}</span>
+      ${esc(q.opts[l])}
+    </button>
+  `).join('');
+}
+
+// ── ANSWER ────────────────────────────────────────────────────────
+function answer(letter){
+  const q = questions[quizIdx];
+  const isCorrect = letter === q.correct;
+
+  // Disable all options
+  LETTERS.forEach(l=>{
+    const btn = document.getElementById('qopt-'+l);
+    btn.disabled=true;
+    if(l===q.correct) btn.classList.add('correct');
+    else if(l===letter && !isCorrect) btn.classList.add('wrong');
+  });
+
+  if(isCorrect){
+    quizScore++;
+    document.getElementById('fbCorrect').classList.add('show');
+  } else {
+    document.getElementById('fbWrongText').textContent =
+      `La bonne réponse était : ${q.correct} — ${esc(q.opts[q.correct])}`;
+    document.getElementById('fbWrong').classList.add('show');
+  }
+
+  document.getElementById('liveScore').textContent = `Score : ${quizScore}`;
+
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.style.display = '';
+  nextBtn.textContent = quizIdx===questions.length-1 ? 'Voir les résultats →' : 'Suivant →';
+}
+
+// ── NEXT QUESTION ─────────────────────────────────────────────────
+function nextQuestion(){
+  quizIdx++;
+  if(quizIdx >= questions.length){
+    showResult(); return;
+  }
+  loadQuestion();
+}
+
+// ── SHOW RESULT ───────────────────────────────────────────────────
+function showResult(){
+  const total = questions.length;
+  const pct   = Math.round((quizScore/total)*100);
+
+  document.getElementById('quizScreen').style.display='none';
+  const rs = document.getElementById('resultScreen');
+  rs.style.display='block';
+
+  document.getElementById('rcScore').textContent  = quizScore;
+  document.getElementById('rcTotal').textContent  = total;
+  document.getElementById('rbCorrect').textContent= quizScore;
+  document.getElementById('rbWrong').textContent  = total-quizScore;
+  document.getElementById('rbPct').textContent    = pct+'%';
+  document.getElementById('progressFill').style.width = '100%';
+
+  // Stars & message
+  let stars,title,sub;
+  if(pct===100){stars='🌟🌟🌟';title='Parfait !';sub='Score parfait ! Vous maîtrisez complètement ce quiz.'}
+  else if(pct>=80){stars='⭐⭐⭐';title='Excellent !';sub='Très bon résultat, continuez comme ça !'}
+  else if(pct>=60){stars='⭐⭐';title='Bien joué !';sub='Bon score ! Encore un petit effort pour atteindre le sommet.'}
+  else if(pct>=40){stars='⭐';title='Peut mieux faire';sub='Vous avez répondu correctement à la moitié. Réessayez !'}
+  else{stars='💪';title='Continuez d\'essayer !';sub='Ne lâchez pas ! Relisez les questions et retentez votre chance.'}
+
+  document.getElementById('resultStars').textContent = stars;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultSub').textContent   = sub;
+}
+
+// ── REPLAY ────────────────────────────────────────────────────────
+function replayQuiz(){ startQuiz(); }
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function shake(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');el.addEventListener('animationend',()=>el.classList.remove('shake'),{once:true})}
+function showWarn(msg){const a=document.getElementById('alertWarn');a.classList.add('show');document.getElementById('alertWarnText').textContent=msg;setTimeout(hideWarn,3500)}
+function hideWarn(){document.getElementById('alertWarn').classList.remove('show')}
+
+// Enter key
+document.getElementById('qText').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('opt-A').focus()});
+['opt-A','opt-B','opt-C'].forEach((id,i)=>{
+  document.getElementById(id).addEventListener('keydown',e=>{
+    if(e.key==='Enter') document.getElementById(['opt-A','opt-B','opt-C','opt-D'][i+1]).focus();
+  });
+});
+document.getElementById('opt-D').addEventListener('keydown',e=>{if(e.key==='Enter')addQuestion()});
+</script>
+</body>
+</html>
